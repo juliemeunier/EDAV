@@ -1,4 +1,4 @@
-project:
+ project:
   type: book
   output-dir: docs
 
@@ -6,11 +6,11 @@ execute:
   echo: true
 
 book:
-  title: "YOUR PROJECT TITLE"
+  title: "Evolution of glacier fed fresh water resources"
   author:
-    - AUTHOR1 (UNI1)
-    - AUTHOR2 (UNI2)
-  repo-url: https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME
+    - Khaled N. Hamdy (kh2666)
+    - Julie Meunier (jm5674)
+  repo-url: https://github.com/juliemeunier/Glacier-and-fresh-water-ressources
   date: today
   page-footer:
     right: |
