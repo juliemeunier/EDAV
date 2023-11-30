@@ -41,9 +41,9 @@ Their work contains the **monthly** spatial variations of 681,137 different lake
 
 In this visualization project, we are using to complementary datasets:
 
--       GLRSED which contains spatial and origin (whether it is glacier or permafrost fed or not) for numerous lakes and water reservoirs
+GLRSED which contains spatial and origin (whether it is glacier or permafrost fed or not) for numerous lakes and water reservoirs
 
--       ReaLSAT which provides us with monthly variations of these water bodies with longitude from -180 to 0 from 1984 to 2020.
+ReaLSAT which provides us with monthly variations of these water bodies with longitude from -180 to 0 from 1984 to 2020.
 
 First, using GLRSED as a starting point, the objective will be to identify the proportion of freshwater reserves coming from melting ice worldwide. Mountain and polar regions are expected to be more dependent on glaciers for their freshwater supply. This first stage of exploration will enable us to identify critical regions whose freshwater reserves are strongly threatened by climate change.
 
