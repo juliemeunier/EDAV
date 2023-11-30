@@ -1,5 +1,59 @@
 # Data
+The first data set is from a project called: A Global Lake/Reservoir Surface Extent Dataset (GLRSED).  This data was collected by the team of (with their associated affiliations)
+* Bingxin Bai (1,2)
+* Lixia Mu (1)
+* Ge Chen (1,2)
+* Yumin Tan (3)
 
-## Description
+**Affiliations**
+
+1. Department of Marine Technology, Ocean University of China, Qingdao
+2. Qingdao National Laboratory for Marine Science and Technology Development Center, Qingdao, a
+3. School of Transportation Science and Engineering, Beihang University, Beijing
+
+The original authors of this work created this GLRSED data set from a combination of multiple data sources including HydroLAKES, GRandD (GRD), and OpenStreetMap. Each of those respective data sets were incomplete or had spatial inconsistencies, necessitating the merge of the data sets. They overlayed it with mountain data to identify the lakes and reservoirs in the mountains and used other information to indicate whether the lakes were source by glaciers.
+
+This is the surface extent data of over 2.17 million reservoirs and lakes found globally.  This spatial extent data is important as it allows one to measure the expansion of lakes as glaciers melt - in other words, use it as a proxy to measure the effects of climate change.    
+
+
+There are 23 different ariables in the data 
+
+* 3 different Lake IDs and their corresponding join flag.  
+ + HylakID and its join flag
+ + GRAND_ID and its join flag
+ + OSM_ID and its join flag
+
+The ID is present depending on the original source from which the data oriented (Hydrolakes, GRD, OpenStreetMAP).  Therefore, not all obervations will have all the Laked
+
+The main variables of interest are as follows:
+
+* Shore Length
+* Lake Area
+* Longitude
+* Latitude
+* Country 
+* Continent
+* Mountain (flag)
+* Glacier (flag)
+* Permafrost (flag)
+
+There are other variables/flags which will not be relevant to our visualization.
+
+The GLRSED data may be found at the following link:
+https://zenodo.org/records/8121174
+
+We found that this data is at a snapshot in time so is very static.  What we need to do is look at the temporal evolution of the surface extent of the lakes/resevoirs.  Thus we plan to merge this data with another data set that has temporal evolution of surface extent data.
+
+The second data set is in article titled: "ReaLSAT, a global dataset of reservoir and lake surface area variations" located at the following link:https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9213522/
+The time series data is located at https://zenodo.org/records/761481
+The authors are:  Ankush Khandelwal, Anuj Karpatne, Praveen Ravirathinam, Rahul Ghosh, Zhihao Wei, Hilary A. Dugan, Paul C. Hanson, and Vipin Kumar.  
+
+Their work contains the **monthly** spatial variations of 681,137 different lakes.   We plan to identify the lakes that are glacier fed and merge that with the information from the GLRSED data set.
+
+
+
+
+
+## Research Plan
 
 ## Missing value analysis
