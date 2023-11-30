@@ -51,9 +51,6 @@ The authors are:  Ankush Khandelwal, Anuj Karpatne, Praveen Ravirathinam, Rahul 
 Their work contains the **monthly** spatial variations of 681,137 different lakes.   We plan to identify the lakes that are glacier fed and merge that with the information from the GLRSED data set.
 
 
-
-
-
 ## Research Plan
 
 ## Missing value analysis
