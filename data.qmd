@@ -1,5 +1,5 @@
 # Data
-The first data set is from a project called: A Global Lake/Reservoir Surface Extent Dataset (GLRSED). This data was collected by the team of Bingxin Bai, Lixia Mu, Ge Chen, Yumin Tan (3)
+The first data set is from a project called: A Global Lake/Reservoir Surface Extent Dataset (GLRSED). This data was collected by the team of Bingxin Bai, Lixia Mu, Ge Chen, Yumin Tan
 
 The original authors of this work created this GLRSED data set from a combination of multiple data sources including HydroLAKES, GRandD (GRD), and OpenStreetMap. Each of those respective data sets were incomplete or had spatial inconsistencies, necessitating the merge of the data sets. They overlayed it with mountain data to identify the lakes and reservoirs in the mountains and used other information to indicate whether the lakes were source by glaciers.
 
@@ -55,3 +55,46 @@ For this particular critical region, we will also study the variation in availab
 
 
 ## Missing value analysis
+```{r}
+library(sf)
+GLRSED <- st_read("C:/Users/meuni/Documents/EDAV/final project/GLRSED_GeoPackage_V1.0/GLRSED_GeoPackage_V1.0/GLRSEDV1.gpkg")
+```
+```{r}
+library(ggplot2)
+# Specify the columns you want to plot
+selected_columns <- c(
+  "Name", "Hylak_ID", "GRAND_ID", "OSM_ID",
+  "Shore_len",
+  "Lake_area",
+  "Longitude",
+  "Latitude",
+  "Glacier"
+)
+
+# Subset the dataset to include only the selected columns
+selected_data <- GLRSED[selected_columns]
+# Count non-NA values per column
+non_na_counts <- colSums(!is.na(selected_data))
+
+# Create a data frame for plotting
+plot_data <- data.frame(
+  column_names = factor(names(non_na_counts), levels = names(non_na_counts)),
+  non_na_counts = non_na_counts
+)
+
+# Create a bar chart
+ggplot(plot_data, aes(x = column_names, y = non_na_counts)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = 0.7) +
+  labs(
+    title = "Number of Non-NA Values per Column",
+    x = "Column Names",
+    y = "Number of Non-NA Values"
+  ) +
+  theme_minimal()
+```
+From this graph, we can see that there is no missing data in the variables of interest. The majority of the data in GLRSED comes from the HydroLAKES dataset, the OpenStreetMap dataset comes second and only a minority comes from the GRD dataset.
+
+According to the authors of the GLRSED dataset, there are a lot of missing values in the OpenStreetMap dataset which leads to lakes and reservoir not being included in GLRSED.
+
+In the case of the GLRSED dataset, assessing the quality of the data is not easy as levels of accuracy vary depending on the source. For the HydroLAKES database, which is the amalgamation of several sources, includes topographic and remote sensing data, each with varying degrees of accuracy. For OSM data, its quality varies among different locations because it is created without any formal qualification.
+
