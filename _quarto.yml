@@ -5,13 +5,12 @@ project:
 execute:
   echo: true
 
-
 book:
-  title: "Evolution of Glacier Fed Water Resource"
+  title: "YOUR PROJECT TITLE"
   author:
-    - Khaled N. Hamdy(kh2666)
-    - Julie Meunier (jm5674)
-  repo-url: https://github.com/juliemeunier/Glacier-and-fresh-water-ressources
+    - AUTHOR1 (UNI1)
+    - AUTHOR2 (UNI2)
+  repo-url: https://github.com/YOUR_GITHUB_ACCOUNT/REPO_NAME
   date: today
   page-footer:
     right: |
