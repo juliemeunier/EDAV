@@ -1,1 +1,110 @@
 # Results
+We are first exploring the lakes and reservoirs world wide to identify global trends and identify a handful of interesting cases to develop afterwards. In order to do that we are using the GLRSED dataset.
+```{r}
+library(sf)
+GLRSED <- st_read("C:/Users/meuni/Documents/EDAV/final project/GLRSED_GeoPackage_V1.0/GLRSED_GeoPackage_V1.0/GLRSEDV1.gpkg")
+```
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+# Count the number of lakes based on glacier and permafrost feeding
+count_types <- GLRSED %>%
+  select(Mountain, SWORD, Glacier, Country, Continent)
+count_types$Permafrost <- ifelse(GLRSED$Permafrost>0, 1,0)
+count_types$Reservoir <-  ifelse(GLRSED$Reservoir==1 | GLRSED$GOODD==1, 1, 0)
+count_types$Endorheic <- ifelse(GLRSED$Endorheic>0, 1,0)
+count_types <- st_drop_geometry(count_types)
+
+long_types <- count_types %>%
+  pivot_longer(cols = c('Mountain', 'SWORD', 'Glacier', 'Permafrost', 'Reservoir', 'Endorheic'), names_to = "LakeType", values_to = "IsType")
+
+```
+
+```{r}
+# Create a bar chart
+ggplot(long_types, aes(x = LakeType, fill=factor(IsType))) +
+  geom_bar() +
+  labs(
+    title = "Count of Different Types of Lakes",
+    x = "Lake Type",
+    y = "Count",
+    fill = "Is Type"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# Create a bar chart
+summary_by_country <- long_types%>%
+  summarize(Count = n(),SumValue = sum(IsType),.by = c(Continent, Country, LakeType))
+summary_by_country$percent <- summary_by_country$SumValue/summary_by_country$Count
+```
+
+```{r}
+ggplot(summary_by_country, aes(x=LakeType,  y=SumValue)) +
+  geom_col()+
+  labs(
+    title = "Count of Different Types of Lakes",
+    x = "Lake Type",
+    y = "Count") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(summary_by_country, aes(x=LakeType,  y=SumValue)) +
+  geom_col()+
+  facet_wrap(~Continent)+
+  labs(
+    title = "Count of Different Types of Lakes",
+    x = "Lake Type",
+    y = "Count") +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
+```{r}
+#indicator for ranking countries depending on how much they rely on glacier or permafrost water
+countries_indicator <- summary_by_country%>%select(Country)
+countries_indicator$indicator<- ifelse(summary_by_country$LakeType=="Glacier"|summary_by_country$LakeType=="Permafrost", summary_by_country$percent, 0)
+countries_indicator<- countries_indicator%>%summarize(Count = n(),indicator = sum(indicator), .by = Country)
+colnames(countries_indicator)[colnames(countries_indicator) == "Country"] <- "country"
+
+```
+
+
+```{r}
+library(rnaturalearth)
+
+# Télécharger des données géospatiales pour les pays
+world <- ne_countries(scale = "medium", returnclass = "sf")
+world$name_sort <- toupper(world$name_long)
+
+# Fusionner les données géospatiales avec les données d'indicateurs
+partial_match <- function(x, y) {
+  matching_indices <- sapply(x, function(name) agrep(name, y, ignore.case = TRUE, value = TRUE, max.distance = 0.1))
+  matching_indices <- lapply(matching_indices, function(matching_index) ifelse(length(matching_index) > 0, matching_index[1], NA))
+  matching_indices <- unlist(matching_indices)
+  matching_indices[!is.na(matching_indices)]
+}
+
+# Perform partial matching
+matching_indices_indic <- partial_match(countries_indicator$country, world$name_long)
+matching_indices_world <- partial_match(world$name_long, countries_indicator$country)
+
+# Merge based on matching indices
+world_data <- merge(world, countries_indicator, by.x = "name_sort", by.y = "country", all.x = TRUE, all.y = TRUE)
+
+# Print the merged data
+print(world_data)
+
+# Créer la carte du monde avec ggplot2
+ggplot() +
+  geom_sf(data = world_data, aes(fill = indicator)) +
+  scale_fill_gradient2(low = "white", high = "red", na.value = "grey40", name = "Percentage") +
+  theme_minimal() +
+  ggtitle("World Map with percentage of freshwater from melting ice")
+```
+
