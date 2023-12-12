@@ -107,4 +107,37 @@ ggplot() +
   theme_minimal() +
   ggtitle("World Map with percentage of freshwater from melting ice")
 ```
+```{r}
+#List of Ice dependent countries
+IceFed = c("SVALBARD AND JAN MAYEN", "GREENLAND", "RUSSIAN FEDERATION", "ANDORRA", "LIECHTENSTEIN", "CANADA")
+NoIce = c("SOUTH AFRICA", "SUDAN", "ZAMBIA", "TANZANIA", "GHANA", "ETHIOPIA")
+most_ice_summary <- summary_by_country %>%
+  filter(Country %in% IceFed)
+least_ice_summary <- summary_by_country %>%
+  filter(Country %in% NoIce)
+
+ggplot(most_ice_summary, aes(x=LakeType,  y=percent)) +
+  geom_col()+
+  facet_wrap(~Country)+
+  labs(
+    title = "Proportion of Different Types of Lakes in most ice dependent countries",
+    x = "Lake Type",
+    y = "Percentage") +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggplot(least_ice_summary, aes(x=LakeType,  y=percent)) +
+  geom_col()+
+  facet_wrap(~Country)+
+  labs(
+    title = "Proportion of Different Types of Lakes in least ice dependent countries",
+    x = "Lake Type",
+    y = "Percentage") +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
 
