@@ -11,49 +11,65 @@ library(tidyr)
 library(dplyr)
 # Count the number of lakes based on glacier and permafrost feeding
 count_types <- GLRSED %>%
-  select(Mountain, SWORD, Glacier, Country, Continent)
+  select(Mountain, SWORD, Glacier, Country, Continent, Lake_area)
 count_types$Permafrost <- ifelse(GLRSED$Permafrost>0, 1,0)
 count_types$Reservoir <-  ifelse(GLRSED$Reservoir==1 | GLRSED$GOODD==1, 1, 0)
 count_types$Endorheic <- ifelse(GLRSED$Endorheic>0, 1,0)
 count_types <- st_drop_geometry(count_types)
-
+```
+```{r}
+library(vcd)
+vcd::mosaic(Glacier ~ Permafrost + Mountain, count_types, direction = c("v", "v", "h"), highlighting_fill= RColorBrewer::brewer.pal(4, "Set3"))
+```
+```{r}
+#some lakes are from more than one type
 long_types <- count_types %>%
   pivot_longer(cols = c('Mountain', 'SWORD', 'Glacier', 'Permafrost', 'Reservoir', 'Endorheic'), names_to = "LakeType", values_to = "IsType")
-
 ```
+
 
 ```{r}
 # Create a bar chart
-ggplot(long_types, aes(x = LakeType, fill=factor(IsType))) +
-  geom_bar() +
-  labs(
-    title = "Count of Different Types of Lakes",
-    x = "Lake Type",
-    y = "Count",
-    fill = "Is Type"
-  ) +
-  theme_minimal()
-```
-
-```{r}
-# Create a bar chart
+Total<- count_types%>%
+  select(-Continent)%>%
+  summarize(Count = n(), TotalArea = sum(Lake_area), .by = c(Country))
+  
 summary_by_country <- long_types%>%
-  summarize(Count = n(),SumValue = sum(IsType),.by = c(Continent, Country, LakeType))
-summary_by_country$percent <- summary_by_country$SumValue/summary_by_country$Count
+  summarize(SumLake = n(), SumArea = sum(Lake_area), .by = c(Continent, Country, LakeType, IsType))
+
+summary_by_country <- merge(summary_by_country, Total, by.x = "Country", by.y = "Country", all.x = TRUE, all.y = TRUE)
+
+summary_by_country$percent_nLake <- summary_by_country$SumLake/summary_by_country$Count *100
+summary_by_country$percent_area <- summary_by_country$SumArea/summary_by_country$TotalArea *100
+
+summary_by_country <- summary_by_country %>%
+  filter(IsType != 0)
+
 ```
 
 ```{r}
-ggplot(summary_by_country, aes(x=LakeType,  y=SumValue)) +
+#number of lakes of each type
+ggplot(summary_by_country, aes(x=LakeType,  y=SumLake)) +
   geom_col()+
   labs(
     title = "Count of Different Types of Lakes",
     x = "Lake Type",
     y = "Count") +
   theme_minimal()
+
+#area of lakes
+ggplot(summary_by_country, aes(x=LakeType,  y=SumArea)) +
+  geom_col()+
+  labs(
+    title = "Area of Different Types of Lakes",
+    x = "Lake Type",
+    y = "Area") +
+  theme_minimal()
 ```
 
 ```{r}
-ggplot(summary_by_country, aes(x=LakeType,  y=SumValue)) +
+#number of lakes
+ggplot(summary_by_country, aes(x=LakeType,  y=SumLake)) +
   geom_col()+
   facet_wrap(~Continent)+
   labs(
@@ -64,12 +80,27 @@ ggplot(summary_by_country, aes(x=LakeType,  y=SumValue)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
+
+#area 
+ggplot(summary_by_country, aes(x=LakeType,  y=SumArea)) +
+  geom_col()+
+  facet_wrap(~Continent)+
+  labs(
+    title = "Area of Different Types of Lakes",
+    x = "Lake Type",
+    y = "Area") +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 ```
+
 ```{r}
 #indicator for ranking countries depending on how much they rely on glacier or permafrost water
 countries_indicator <- summary_by_country%>%select(Country)
-countries_indicator$indicator<- ifelse(summary_by_country$LakeType=="Glacier"|summary_by_country$LakeType=="Permafrost", summary_by_country$percent, 0)
-countries_indicator<- countries_indicator%>%summarize(Count = n(),indicator = sum(indicator), .by = Country)
+countries_indicator$percent_nLake<- ifelse(summary_by_country$LakeType=="Glacier"|summary_by_country$LakeType=="Permafrost", summary_by_country$percent_nLake, 0)
+countries_indicator$percent_area<- ifelse(summary_by_country$LakeType=="Glacier"|summary_by_country$LakeType=="Permafrost", summary_by_country$percent_area, 0)
+countries_indicator<- countries_indicator%>%summarize(Count = n(),percent_nLake = sum(percent_nLake), percent_area=sum(percent_area), .by = Country)
 colnames(countries_indicator)[colnames(countries_indicator) == "Country"] <- "country"
 
 ```
@@ -102,42 +133,163 @@ print(world_data)
 
 # Créer la carte du monde avec ggplot2
 ggplot() +
-  geom_sf(data = world_data, aes(fill = indicator)) +
+  geom_sf(data = world_data, aes(fill = percent_area)) +
   scale_fill_gradient2(low = "white", high = "red", na.value = "grey40", name = "Percentage") +
   theme_minimal() +
   ggtitle("World Map with percentage of freshwater from melting ice")
 ```
 ```{r}
-#List of Ice dependent countries
-IceFed = c("SVALBARD AND JAN MAYEN", "GREENLAND", "RUSSIAN FEDERATION", "ANDORRA", "LIECHTENSTEIN", "CANADA")
+#List of Ice dependent countries using percentage of area
+IceFed = c("SVALBARD AND JAN MAYEN", "GREENLAND", "ANDORRA", "LIECHTENSTEIN", "KYRGYZSTAN", "ARMENIA")
 NoIce = c("SOUTH AFRICA", "SUDAN", "ZAMBIA", "TANZANIA", "GHANA", "ETHIOPIA")
 most_ice_summary <- summary_by_country %>%
   filter(Country %in% IceFed)
 least_ice_summary <- summary_by_country %>%
   filter(Country %in% NoIce)
 
-ggplot(most_ice_summary, aes(x=LakeType,  y=percent)) +
+ggplot(most_ice_summary, aes(x=LakeType,  y=percent_area)) +
   geom_col()+
   facet_wrap(~Country)+
   labs(
     title = "Proportion of Different Types of Lakes in most ice dependent countries",
     x = "Lake Type",
-    y = "Percentage") +
+    y = "Percentage of area") +
   theme_minimal()+
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-ggplot(least_ice_summary, aes(x=LakeType,  y=percent)) +
+ggplot(least_ice_summary, aes(x=LakeType,  y=percent_area)) +
   geom_col()+
   facet_wrap(~Country)+
   labs(
     title = "Proportion of Different Types of Lakes in least ice dependent countries",
     x = "Lake Type",
-    y = "Percentage") +
+    y = "Percentage of area") +
   theme_minimal()+
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
+```
+
+```{r}
+# Generate sample data (longitude, latitude, and heat values)
+North_America <- count_types
+North_America$longitude <- GLRSED$Longitude
+North_America$latitude <- GLRSED$Latitude
+North_America <- North_America%>%filter(Continent == "North America")
+
+lon_bin_size <- 1
+lat_bin_size <- 1
+
+# Summarize the data into 10x10 squares
+summarized_North_America <- North_America %>%
+  mutate(
+    LonBin = cut(longitude, breaks = seq(-180, 180, lon_bin_size), labels = FALSE),
+    LatBin = cut(latitude, breaks = seq(-90, 90, lat_bin_size), labels = FALSE)
+  ) %>%
+  group_by(LonBin, LatBin) %>%
+  summarize(
+    Number_of_Lakes = n(),
+    Total_area = sum(Lake_area),
+    nMountain = sum(Mountain),
+    nGlacier = sum(Glacier),
+    nPermafrost = sum(Permafrost),
+    Latitude = (min(latitude)%/%lat_bin_size) *lat_bin_size,
+    Longitude = (min(longitude)%/%lon_bin_size) *lon_bin_size
+  )
+
+area_score <- North_America %>%
+  mutate(
+    LonBin = cut(longitude, breaks = seq(-180, 180, lon_bin_size), labels = FALSE),
+    LatBin = cut(latitude, breaks = seq(-90, 90, lat_bin_size), labels = FALSE)
+  ) %>%
+  group_by(LonBin, LatBin, Glacier, Permafrost) %>%
+  summarize(
+    Lake_area = sum(Lake_area)
+  )%>%
+  filter(Glacier==1 | Permafrost==1)
+
+summarized_North_America <- merge(summarized_North_America, area_score, by = c("LonBin", "LatBin"), all.x = TRUE, all.y = TRUE)
+
+summarized_North_America[is.na(summarized_North_America)] <- 0
+
+summarized_North_America$score <-summarized_North_America$Lake_area/summarized_North_America$Total_area *100
+```
+
+```{r}
+heatmap <- ggplot(summarized_North_America, aes(x = Longitude, y = Latitude, fill = score)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "red") +
+  borders("world", regions = c("USA", "Canada", "Greenland", "Mexico","Belize","Costa Rica", "Cuba", "Dominican Republic", "El Salvador", "Guatemala", "Haiti", "Honduras", "Jamaica","Martinique", "Nicaragua", "NORTHERN MARIANA ISLANDS", "Panama", "Puerto Rico", "Trinidad and Tobago"), color = "black") +
+  borders("state", color = "black", size = 0.5)+
+  coord_fixed(1.3, xlim = c(-180, 0), ylim = c(0, 90))+
+  theme_minimal()+
+  theme(panel.background = element_rect(fill = "lightblue"))
+
+print(heatmap)
+```
+
+
+
+```{r}
+realSAT <- read.csv("C:/Users/meuni/Documents/EDAV/final project/MergedData.csv")
+glacier_800090 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-80_-60/ID_800090.csv")
+glacier_800089 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-80_-50/ID_800089.csv")
+glacier_800088 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-80_-50/ID_800088.csv")
+```
+
+```{r}
+#code from ReaLSAT, a global dataset of reservoir and lake surface area variations Creators Ankush Khandelwal ORCID Anuj Karpatne Zhihao Wei Rahul Ghosh Hilary Dugan Paul Hanson Vipin Kumar
+
+dyear <- rep(seq(1984, 2019), each = 12)
+dmonth <- rep(0:11, times = 35)
+
+# Check if the average missing percentage before and after any given timestep is more than the threshold
+prune_time_steps <- function(fill_ts, window_size) {
+  T <- length(fill_ts)
+  prn_ts <- rep(FALSE, T)
+  
+  for (j in 2:(T - 1)) {
+    cur_ts_before <- fill_ts[max(1, j - window_size):j]
+    cur_ts_after <- fill_ts[(j + 1):min(j + window_size + 1, T)]
+    if(mean(cur_ts_before)>90 | mean(cur_ts_after)>90){prn_ts[j] <- TRUE}
+  }
+  if(fill_ts[1]>90){
+    prn_ts[1] <- TRUE
+  }
+  if(fill_ts[T-1]>90){
+    prn_ts[T-1] <- TRUE
+  }
+  return(prn_ts)
+}
+
+# Plotting
+area_ts <- as.numeric(glacier_800089[3, ]) * 0.0009  # area timeseries in terms of number of pixels
+fill_ts <- as.numeric(glacier_800089[1, ])  # percentage of missing glacier_800090 in each month
+area_ts_gsw <- as.numeric(glacier_800089[4, ]) * 0.0009
+
+# Extracting timesteps where area values were potentially affected by a large amount of missing data around them.
+bad_ts <- prune_time_steps(fill_ts, 3)
+
+area_ts[bad_ts] <- NA  # assigning NA values to the missing timesteps
+area_ts_gsw[bad_ts] <- NA  # assigning NA values to the missing timesteps
+
+#removing value from 2020
+area_ts <- area_ts[1:(length(area_ts)-10)]
+area_ts_gsw <- area_ts_gsw[1:(length(area_ts_gsw)-10)]
+# Plotting
+df <- data.frame(Column1=dyear, Column2=area_ts, Column3=area_ts_gsw)
+
+ggplot(df, aes(x = dyear)) +
+  geom_line(aes(y = area_ts), color = 'blue', linetype = 'solid') +
+  geom_line(aes(y = area_ts_gsw), color = 'green', linetype = 'solid') +
+  labs(
+    title = 'Area Over Time',
+    y = 'Area (sq. kms.)',
+    x = 'Time'
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
