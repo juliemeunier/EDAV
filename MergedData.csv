@@ -1,0 +1,13 @@
+"","City","Courntry","Type","Hylak_id","longitude","latitude","area","ID","RESERVOIR","REL_DYN","CONTINENT","RIVR_SCORE","EPHM_SCORE","COMP_SCORE","AREA","GRWL_1km","GRWL_4km","RES","BLON","BLAT"
+"1","","Argentina","Glacier",90,"-72,6","-50,22",1324,800090,-1,-1,5,-1,-1,-1,1468100,1,1,300,-80,-60
+"2","","Argentina","Glacier",89,"-72,23","-49,69",1197,800089,-1,-1,5,-1,-1,-1,1328600,1,1,300,-80,-50
+"3","","Chile","Glacier",88,"-72,66","-48,86",1013,800088,-1,-1,5,-1,-1,-1,1123400,1,1,300,-80,-50
+"4","","Canada","Glacier",179,"-71,13","81,78",555,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"5","","Canada","Glacier",196,"-73,13","70,54",329,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"6","","Canada","Glacier",194,"-143,32","70,36",325,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"7","Baikal","Russia","Permafrost",11,"108,4","53,68",32108,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"8","Great Bear","Canada","Permafrost",2,"-120,92","66",30996,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"9","Great Slave","Canada","Permafrost",3,"-115,48","61,29",27372,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"10","Winnipeg","Canada","Permafrost",4,"-97,81","52,6",25467,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"11","Athabasca","Canada","Permafrost",33,"-109,8","59,21",7685,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
+"12","Reinder","Canada","Permafrost",38,"-102,36","57,3",6453,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA
