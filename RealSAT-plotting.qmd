@@ -26,8 +26,8 @@ RealSAT |> ggplot(aes(RIVR_SCORE)) +
 
 TL <- read.csv("C:\\Users\\khale\\OneDrive\\Desktop\\Exploratory Data Analysis and Visualization\\Final Project\\TopLakes.csv")
 TLnew<-TL |> 
-+ left_join(RealSAT, by="Hylak_id")
-> 
+ left_join(RealSAT, by="Hylak_id")
+
 ```
 
 ```{r}
@@ -37,7 +37,7 @@ data <- ts1
 
 dyear <- c()
 dmonth <- c()
-for (i in 1984:2015) {
+for (i in 1984:2020) {
   for (j in 0:11) {
     dyear <- c(dyear, i)
     dmonth <- c(dmonth, j)
@@ -55,7 +55,7 @@ prune_time_steps <- function(fill_ts, window_size) {
   for (j in 2:(T-1)) {
     cur_ts_before <- fill_ts[max(1, j-window_size):j]
     cur_ts_after <- fill_ts[(j+1):min(j+window_size+1, T)]
-    if (mean(cur_ts_before) > 90 || mean(cur_ts_after) > 90) {
+    if (mean(cur_ts_before) > 90 | mean(cur_ts_after) > 90) {
       prn_ts[j] <- TRUE
     }
   }
@@ -73,18 +73,23 @@ prune_time_steps <- function(fill_ts, window_size) {
 ```{r}
 library(ggplot2)
 
+
+
+
 area_ts <- as.numeric(data[3,]) * 0.0009
-fill_ts <- data[1,]
-update_ts <- data[2,]
+fill_ts <- as.numeric(data[1,])
+update_ts <- as.numeric(data[2,])
 area_ts_gsw <- as.numeric(data[4,]) * 0.0009
 
 bad_ts <- prune_time_steps(as.numeric(data[1,]), 3)
 area_ts[bad_ts] <- NA
 area_ts_gsw[bad_ts] <- NA
+ggplot()+
+#ggplot(as.data.frame(area_ts), aes(x = 1:length(area_ts), y = area_ts), color = "blue", size = 1) + geom_line()+
+ # geom_point() + #geom_smooth(method="loess",span=.1, na.rm=FALSE)+
+geom_line(aes(x = 1:length(area_ts), y = area_ts), color ="blue", linetype = "solid", size = 1) +
 
-ggplot(as.data.frame(area_ts), aes(x = 1:length(area_ts), y = area_ts), color = "blue", size = 1) + geom_line()+
-  geom_point() + geom_smooth(method="loess",span=.1, na.rm=FALSE)+
-  #geom_line(aes(x = 1:length(area_ts_gsw), y = area_ts_gsw), color = "green", linetype = "solid", size = 1) +
+  geom_line(aes(x = 1:length(area_ts_gsw), y = area_ts_gsw), color = "green", linetype = "solid", size = 1) +
   labs(x = "Time", y = "Area (sq. kms.)", title = "Area vs Time") +
   scale_x_continuous(breaks = seq(1, 384, 48), labels = dyear[seq(1, 384, 48)], limits = c(1, 384)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
