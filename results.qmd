@@ -177,6 +177,7 @@ ggplot(least_ice_summary, aes(x=LakeType,  y=percent_area)) +
 North_America <- count_types
 North_America$longitude <- GLRSED$Longitude
 North_America$latitude <- GLRSED$Latitude
+North_America$Hylak_ID <- GLRSED$Hylak_ID
 North_America <- North_America%>%filter(Continent == "North America")
 
 lon_bin_size <- 1
@@ -242,9 +243,6 @@ glacier_800088 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/
 ```{r}
 #code from ReaLSAT, a global dataset of reservoir and lake surface area variations Creators Ankush Khandelwal ORCID Anuj Karpatne Zhihao Wei Rahul Ghosh Hilary Dugan Paul Hanson Vipin Kumar
 
-dyear <- rep(seq(1984, 2019), each = 12)
-dmonth <- rep(0:11, times = 35)
-
 # Check if the average missing percentage before and after any given timestep is more than the threshold
 prune_time_steps <- function(fill_ts, window_size) {
   T <- length(fill_ts)
@@ -264,32 +262,169 @@ prune_time_steps <- function(fill_ts, window_size) {
   return(prn_ts)
 }
 
-# Plotting
-area_ts <- as.numeric(glacier_800089[3, ]) * 0.0009  # area timeseries in terms of number of pixels
-fill_ts <- as.numeric(glacier_800089[1, ])  # percentage of missing glacier_800090 in each month
-area_ts_gsw <- as.numeric(glacier_800089[4, ]) * 0.0009
+make_dataframe <- function(glacier_id, start_year=1984, end_year=2020) {
+  dyear <- rep(seq(1984, 2020), each = 12)
+  dyear <-dyear[1:442]
+  dmonth <- rep(0:11, times = 37)
+  dmonth <- dmonth[1:442]
 
-# Extracting timesteps where area values were potentially affected by a large amount of missing data around them.
-bad_ts <- prune_time_steps(fill_ts, 3)
+  # Plotting
+  area_ts <- as.numeric(glacier_id[3, ]) * 0.0009  # area timeseries in terms of number of pixels
+  fill_ts <- as.numeric(glacier_id[1, ])  # percentage of missing glacier_800090 in each month
+  area_ts_gsw <- as.numeric(glacier_id[4, ]) * 0.0009
 
-area_ts[bad_ts] <- NA  # assigning NA values to the missing timesteps
-area_ts_gsw[bad_ts] <- NA  # assigning NA values to the missing timesteps
+  # Extracting timesteps where area values were potentially affected by a large amount of missing data around them.
+  bad_ts <- prune_time_steps(fill_ts, 3)
+  
+  area_ts[bad_ts] <- NA  # assigning NA values to the missing timesteps
+  area_ts_gsw[bad_ts] <- NA  # assigning NA values to the missing timesteps
+  
+  # Plotting
+  df <- data.frame(Column1=dyear, Column2=area_ts, Column3=area_ts_gsw, Column4=dmonth)%>%filter(Column1>start_year & Column1<end_year)
+  return(df)
+}
 
-#removing value from 2020
-area_ts <- area_ts[1:(length(area_ts)-10)]
-area_ts_gsw <- area_ts_gsw[1:(length(area_ts_gsw)-10)]
-# Plotting
-df <- data.frame(Column1=dyear, Column2=area_ts, Column3=area_ts_gsw)
+plotting_timeseries <- function(df) {
+  plot <- ggplot(df, aes(x = Column1, y = Column2)) +
+    geom_point(color = 'blue', linetype = 'solid') +
+    labs(
+      title = 'Area Over Time',
+      y = 'Area (sq. kms.)',
+      x = 'Time'
+    ) +
+    geom_smooth()
+    theme_minimal()
+  print(plot)
+}
+```
 
-ggplot(df, aes(x = dyear)) +
-  geom_line(aes(y = area_ts), color = 'blue', linetype = 'solid') +
-  geom_line(aes(y = area_ts_gsw), color = 'green', linetype = 'solid') +
-  labs(
-    title = 'Area Over Time',
-    y = 'Area (sq. kms.)',
-    x = 'Time'
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```{r}
+#print glacier lakes
+plotting_timeseries(make_dataframe(glacier_800090,1994, 2018))
+plotting_timeseries(make_dataframe(glacier_800089,1994, 2018))
+plotting_timeseries(make_dataframe(glacier_800088,1994, 2018))
+```
+
+
+```{r}
+plot_seasonal_variation <- function(df){
+  plot<- ggplot(df, aes(x = Column4, y = Column2, color=Column1)) +
+    geom_point() +
+    labs(
+      title = 'Area Over a year',
+      y = 'Area (sq. kms.)',
+      x = 'Time'
+    ) +
+    geom_smooth()+
+    theme_minimal()
+  print(plot)
+}
+```
+
+```{r}
+#print glacier lakes
+plot_seasonal_variation(make_dataframe(glacier_800090,1994, 2018))
+plot_seasonal_variation(make_dataframe(glacier_800090,1994, 2018))
+plot_seasonal_variation(make_dataframe(glacier_800090,1994, 2018))
+```
+```{r}
+#afirque du sud
+lake_332830 <-read.csv("C:/Users/meuni/Documents/EDAV/final project/realsat/monthly_timeseries/monthly_timeseries_20_-40/ID_332830.csv")
+plotting_timeseries(make_dataframe(lake_332830))
+plot_seasonal_variation(make_dataframe(lake_332830))
+```
+```{r}
+#no ice US
+lake_800698 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/realsat/monthly_timeseries/monthly_timeseries_-120_50/ID_800698.csv")
+plotting_timeseries(make_dataframe(lake_800698))
+plot_seasonal_variation(make_dataframe(lake_800698))
+```
+```{r}
+realSAT_US <-st_read("C:/Users/meuni/Documents/EDAV/final project/realsat/ReaLSAT-2-0/ReaLSAT.shp")%>%filter(CONTINENT==2)
+```
+```{r}
+US <- North_America%>%filter(Country=="UNITED STATES" & !Hylak_ID=='NA')
+US <- merge(US, realSAT_US, by.x="Hylak_ID", by.y="Hylak_id", all.x=TRUE)
+US <- US%>%filter(!ID=='NA')
+```
+
+```{r}
+glacier_712529 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-120_40/ID_712529.csv")
+glacier_712529 <- make_dataframe(glacier_712529)
+glacier_677013 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-110_40/ID_677013.csv")
+glacier_677013 <- make_dataframe(glacier_677013)
+glacier_676761 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-120_40/ID_676761.csv")
+glacier_676761 <- make_dataframe(glacier_676761)
+glacier_671117 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-110_40/ID_671117.csv")
+glacier_671117 <- make_dataframe(glacier_671117)
+glacier_733649 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-120_30/ID_733649.csv")
+glacier_733649 <- make_dataframe(glacier_733649)
+glacier_711481 <- read.csv("C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/monthly_timeseries_-110_40/ID_711481.csv")
+glacier_711481 <- make_dataframe(glacier_711481)
+```
+
+```{r}
+US_glacier_timeseries <- data.frame(matrix(nrow = 420, ncol = 0))
+US_glacier_timeseries$year <- glacier_712529$Column1
+US_glacier_timeseries$month <- glacier_712529$Column4
+US_glacier_timeseries$glacier_712529 <- glacier_712529$Column2
+US_glacier_timeseries$glacier_677013 <- glacier_677013$Column2
+US_glacier_timeseries$glacier_676761 <- glacier_676761$Column2
+US_glacier_timeseries$glacier_671117 <- glacier_671117$Column2
+US_glacier_timeseries$glacier_733649 <- glacier_733649$Column2
+US_glacier_timeseries$glacier_711481 <- glacier_711481$Column2
+
+US_glacier_timeseries$month_code <- month.abb[US_glacier_timeseries$month + 1]
+US_glacier_timeseries$month_code <- factor(US_glacier_timeseries$month_code, levels = month.abb)
+#write.csv(US_glacier_timeseries, "C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/US_glacier_timeseries.csv", row.names = FALSE)
+```
+
+```{r}
+ggplot(US_glacier_timeseries, aes(x = year, y = glacier_671117)) +
+    geom_point() +
+    labs(
+      title = 'Area Over Time',
+      y = 'Area (sq. kms.)',
+      x = 'Time'
+    ) +
+    geom_smooth()
+    theme_minimal()
+
+ggplot(US_glacier_timeseries, aes(x = month, y = glacier_671117)) +
+    geom_point() +
+    labs(
+      title = 'Seasonal variation',
+      y = 'Area (sq. kms.)',
+      x = 'Time'
+    ) +
+    geom_smooth()
+    theme_minimal()
+```
+```{r}
+library(reshape2)
+melted_data <- melt(US_glacier_timeseries, id.vars = c("year", "month_code", "month"), variable.name = "lake")
+
+# Create a faceted line plot
+ggplot(melted_data, aes(x = year, y = value, group = lake, color = month_code)) +
+  geom_point() +
+  geom_smooth()+
+  facet_wrap(~lake, scales = "free_y") +
+  labs(title = "Variations of Lake Surface Over the Years",
+       x = "Year",
+       y = "Surface Variation") +
+  theme_minimal()
+
+ggplot(melted_data, aes(x = month_code, y = value, group = lake, color = year)) +
+  geom_point() +
+  geom_smooth()+
+  facet_wrap(~lake, scales = "free_y") +
+  labs(title = "Seasonal Variations of Lake Surface",
+       x = "Month",
+       y = "Surface Variation") +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+  
 ```
 
