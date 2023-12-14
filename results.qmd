@@ -377,6 +377,31 @@ US_glacier_timeseries$glacier_711481 <- glacier_711481$Column2
 US_glacier_timeseries$month_code <- month.abb[US_glacier_timeseries$month + 1]
 US_glacier_timeseries$month_code <- factor(US_glacier_timeseries$month_code, levels = month.abb)
 #write.csv(US_glacier_timeseries, "C:/Users/meuni/Documents/EDAV/final project/ReaLSAT/monthly_timeseries/US_glacier_timeseries.csv", row.names = FALSE)
+
+
+
+```
+```{r}
+library(lubridate)
+US_glacier<- read.csv("C:\\Users\\khale\\OneDrive\\Desktop\\RFiles\\Glacier-and-fresh-water-ressources\\US_glacier_timeseries.csv")
+US_glacier$year <- as.character(US_glacier$year)
+US_glacier$month<- as.character(US_glacier$month + 1)
+US_glacier <- US_glacier |> mutate(make_date(US_glacier$year, US_glacier$month))
+names(US_glacier)[9] <- "RDate"
+US_glacier_712529 <- US_glacier[c("RDate", "glacier_712529")]
+US_glacier_677013 <- US_glacier[c("RDate", "glacier_677013")]
+US_glacier_676761 <- US_glacier[c("RDate", "glacier_676761")]
+US_glacier_671117 <- US_glacier[c("RDate", "glacier_671117")]
+US_glacier_733649 <- US_glacier[c("RDate", "glacier_733649")]
+US_glacier_711481 <- US_glacier[c("RDate", "glacier_711481")]
+
+#write.csv(US_glacier_712529,"C:\\Users\\khale\\OneDrive\\Desktop\\RFiles\\Glacier-and-fresh-water-ressources\\US_glacier_712529.csv", row.names = FALSE)
+#write.csv(US_glacier_677013,"C:\\Users\\khale\\OneDrive\\Desktop\\RFiles\\Glacier-and-fresh-water-ressources\\US_glacier_677013.csv", row.names = FALSE)
+#write.csv(US_glacier_676761,"C:\\Users\\khale\\OneDrive\\Desktop\\RFiles\\Glacier-and-fresh-water-ressources\\US_glacier_676761.csv", row.names = FALSE)
+#write.csv(US_glacier_671117,"C:\\Users\\khale\\OneDrive\\Desktop\\RFiles\\Glacier-and-fresh-water-ressources\\US_glacier_671117.csv", row.names = FALSE)
+#write.csv(US_glacier_733649,"C:\\Users\\khale\\OneDrive\\Desktop\\RFiles\\Glacier-and-fresh-water-ressources\\US_glacier_733648.csv", row.names = FALSE)
+#write.csv(US_glacier_711481,"C:\\Users\\khale\\OneDrive\\Desktop\\RFiles\\Glacier-and-fresh-water-ressources\\US_glacier_711481.csv", row.names = FALSE)
+
 ```
 
 ```{r}
