@@ -7,7 +7,7 @@ This is the surface extent data of over 2.17 million reservoirs and lakes found 
 
 There are 23 different ariables in the data
 
--   3 different Lake IDs and their corresponding join flag.\
+-   3 different Lake IDs and their corresponding join flag./
 -   HylakID and its join flag
 -   GRAND_ID and its join flag
 -   OSM_ID and its join flag
@@ -36,6 +36,8 @@ The second data set is in article titled: "ReaLSAT, a global dataset of reservoi
 
 Their work contains the **monthly** spatial variations of 681,137 different lakes. We plan to identify the lakes that are glacier fed and merge that with the information from the GLRSED data set.
 
+We are also using an additional dataset from the Colorado Climate Center from Colorado State University containing the monthly max and min temperatures, precipitations and snowfall measured in a weather station in Boulder, CO from 1984 to 2022. This dataset comes in a .csv file.
+
 
 ## Research plan
 
@@ -55,8 +57,11 @@ For this particular critical region, we will also study the variation in availab
 
 
 ## Missing value analysis
+### GLRSED
 ```{r}
 library(sf)
+library(dplyr)
+library(tidyr)
 GLRSED <- st_read("C:/Users/meuni/Documents/EDAV/final project/GLRSED_GeoPackage_V1.0/GLRSED_GeoPackage_V1.0/GLRSEDV1.gpkg")
 ```
 ```{r}
@@ -98,3 +103,84 @@ According to the authors of the GLRSED dataset, there are a lot of missing value
 
 In the case of the GLRSED dataset, assessing the quality of the data is not easy as levels of accuracy vary depending on the source. For the HydroLAKES database, which is the amalgamation of several sources, includes topographic and remote sensing data, each with varying degrees of accuracy. For OSM data, its quality varies among different locations because it is created without any formal qualification.
 
+### RealSAT
+In the rest of the work, we are only using a few lakes from RealSAT. The data is stored in .csv files. We have taken into account the available data in RealSAT when selected the lakes to study from GLRSED.
+```{r}
+US_glacier_timeseries <- read.csv("C:/Users/meuni/Documents/EDAV/final project/realsat/monthly_timeseries/US_glacier_timeseries.csv")
+US_lake_timeseries <- read.csv("C:/Users/meuni/Documents/EDAV/final project/realsat/monthly_timeseries/US_lake_timeseries.csv")
+boulder_glacier <- read.csv("C:/Users/meuni/Documents/EDAV/final project/realsat/monthly_timeseries/US_glacierBoulder_timeseries.csv")
+boulder_lake <- read.csv("C:/Users/meuni/Documents/EDAV/final project/realsat/monthly_timeseries/US_lakeBoulder_timeseries.csv")
+
+RealSAT <- merge(US_glacier_timeseries, US_lake_timeseries, by=c("year", "month"))%>%select(!glacier_671117)
+RealSAT <- merge(RealSAT, boulder_glacier, by=c("year", "month"))
+RealSAT<- merge(RealSAT, boulder_lake, by=c("year", "month"))
+RealSAT_longer <- RealSAT%>%
+  pivot_longer(cols = c(starts_with("lake"), starts_with("glacier")), names_to = "lake", values_to = "value") %>%
+  mutate(missing = ifelse(is.na(value), 1, 0))
+RealSAT_longer <- RealSAT_longer%>%
+  summarize(missing=sum(missing), .by=c("month", "lake"))
+
+ggplot(RealSAT_longer, aes(x = lake, y = month, fill = missing)) +
+  geom_tile() +
+  labs(title = "Heat Map of Missing Values Across Months for Different Lakes",
+       x = "Lake",
+       y = "Month",
+       fill = "Missing") +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1)
+  )
+  
+```
+A lot of data is missing during the winter months for the glacier-fed lakes. It can not be filled with the values available for normal lakes as they don't follow the same seasonal trends.
+
+### Precipitions from Colorado Climate Center
+```{r}
+boulder_weather <- read.csv("C:/Users/meuni/Documents/EDAV/final project/Boulder_weather_data.csv")
+boulder_weather$maxTemp <- as.numeric(boulder_weather$maxTemp)
+boulder_weather$minTemp <- as.numeric(boulder_weather$minTemp)
+boulder_weather$precip <- as.numeric(boulder_weather$precip)
+boulder_weather$snowfall <- as.numeric(boulder_weather$snowfall)
+boulder_weather$date <- as.Date(paste(boulder_weather$date, '01', sep='-'))
+boulder_weather$month <- format(as.Date(boulder_weather$date, format="%d/%m/%Y"),"%m")
+boulder_weather$year <-format(as.Date(boulder_weather$date, format="%d/%m/%Y"),"%Y")
+
+boulder_weather_month <- boulder_weather%>%
+  summarize(minTemp= sum(is.na(minTemp)), maxTemp= sum(is.na(maxTemp)), precip= sum(is.na(precip)),snowfall= sum(is.na(snowfall)), .by=month)
+
+boulder_weather_longer <- boulder_weather_month%>%
+  pivot_longer(cols = c(minTemp, maxTemp, precip, snowfall), names_to = "variable", values_to = "value")
+
+ggplot(boulder_weather_longer, aes(x = variable, y = month, fill = value)) +
+  geom_tile() +
+  labs(title = "Heat Map of Missing Values Across in weather records in Boulder, CO",
+       x = "Variable",
+       y = "Month",
+       fill = "Missing") +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1)
+  )
+```
+```{r}
+boulder_weather_year <- boulder_weather%>%
+  summarize(minTemp= sum(is.na(minTemp)), maxTemp= sum(is.na(maxTemp)), precip= sum(is.na(precip)),snowfall= sum(is.na(snowfall)), .by=year)%>%
+  filter(year>1984 & year<2020)
+
+boulder_weather_longer <- boulder_weather_year%>%
+  pivot_longer(cols = c(minTemp, maxTemp, precip, snowfall), names_to = "variable", values_to = "value")
+
+ggplot(boulder_weather_longer, aes(x = variable, y = year, fill = value)) +
+  geom_tile() +
+  labs(title = "Heat Map of Missing Values Across in weather records in Boulder, CO",
+       x = "Variable",
+       y = "Year",
+       fill = "Missing") +
+  theme_minimal()+
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1)
+  )
+```
+
+This dataset is overall of good quality. Only a few values are missing across categories.
+Some years have very sparse data: 1989 and 1990. Overall the snowfall variable is the one with the most missing data.
