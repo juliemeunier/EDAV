@@ -134,7 +134,7 @@ ggplot(RealSAT_longer, aes(x = lake, y = month, fill = missing)) +
 ```
 A lot of data is missing during the winter months for the glacier-fed lakes. It can not be filled with the values available for normal lakes as they don't follow the same seasonal trends.
 
-### Precipitions from Colorado Climate Center
+### Precipitations from Colorado Climate Center
 ```{r}
 boulder_weather <- read.csv("C:/Users/meuni/Documents/EDAV/final project/Boulder_weather_data.csv")
 boulder_weather$maxTemp <- as.numeric(boulder_weather$maxTemp)
