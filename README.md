@@ -1,4 +1,4 @@
-This repo contains a [Quarto book](https://quarto.org/docs/books/) template for the EDAV final project.
+This repo contains a [Quarto book](https://quarto.org/docs/books/) template for the EDAV final project focusing on glacier-fed lakes in the US.
 The dataset used contains geo data and timeseries.
 
 The goal of this project is to:
