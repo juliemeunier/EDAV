@@ -65,19 +65,20 @@
 
 	 d3.csv("https://github.com/juliemeunier/Glacier-and-fresh-water-ressources/blob/results---Julie/resources/US_glacier_712529.csv", function (d) {
 	     return {RDate: d.year,
-	     	glacier_712529: d.SurfArea,
+	     	glacier_712529: d.SurfArea
 	     };
+	     
 	 }).then(function (data) {
 	     
 	     //Set x scale
 	     var x = d3.scaleLinear()
 		       .domain(d3.extent(data, d => d.year))
 		       .range([0, width]);
-
+	     
 	     //Set y scale
 	     var y = d3.scaleLinear()
-		       .domain([0, 100])
-		       .range([height, 0]);
+		       .domain([0, d3.max(data,d => d.glacier_712529)])
+		       .range([height], 0]);
 
 	     //line function
 	     var line = d3.line()
@@ -126,7 +127,7 @@
 	     
 	     //Draw time series
 	     const path = container.append("g")
-				 .selectAll(".US_Glacier_712529")
+				 .selectAll(".Glacier_712529")
 				 .data(data)
 				 .enter()
 				 .append("path")
