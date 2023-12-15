@@ -9,5 +9,15 @@
 <div id="plot">
 </div>
 
+
+
+<input class="selector" type="checkbox" value="Glacier_712529" id="Glacier_712529" checked="true"/><label for="Glacier_712529">Glacier_712529</label>
+	<input class="selector" type="checkbox" value="Glacier_677013" id="Glacier_677013" checked="true"/><label for="Glacier_677013">Glacier_677013</label>
+	<input class="selector" type="checkbox" value="Glacier_676761" id="Glacier_676761" checked="true"/><label for="Glacier_676761">Glacier_676761</label>
+	
+
+
+
+
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="scripts/myscript.js"></script>
